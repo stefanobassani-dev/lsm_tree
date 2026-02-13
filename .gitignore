@@ -1,0 +1,11 @@
+cmake-build-debug/
+cmake-build-release/
+build/
+
+database.db
+*.log
+*.tmp
+
+.idea/
+.DS_Store
+Thumbs.db
