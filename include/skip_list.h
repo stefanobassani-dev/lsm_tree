@@ -3,21 +3,25 @@
 
 #define MAX_LEVEL 3
 
-typedef struct {
+typedef struct s_node_t {
   char key[64];
   char value[128];
-  Node** forward;
-} Node;
+  struct s_node_t** forward;
+} s_node_t;
 
-typedef struct {
+typedef struct skip_list_t {
   int level;
-  Node* head;
-} SkipList;
+  s_node_t* head;
+} skip_list_t;
 
-Node* create_node(char* key, char* value, int level);
+int random_level();
 
-SkipList* create_skiplist();
+s_node_t* create_node(const char* key, const char* value, int level);
 
-void insert(SkipList*, char*, char*);
+skip_list_t* create_skiplist();
+
+char* search(skip_list_t* list, char* key);
+
+void insert(skip_list_t*, char* key, char* value);
 
 #endif
