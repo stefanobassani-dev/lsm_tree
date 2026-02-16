@@ -1,4 +1,4 @@
-#include "skip_list.h"
+#include "memtable.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +11,12 @@ int random_level() {
   }
 
   return level;
+}
+
+size_t calculate_node_size(int level) {
+  size_t struct_size = sizeof(s_node_t);
+  size_t pointers_size = (level + 1) * sizeof(s_node_t*);
+  return struct_size + pointers_size;
 }
 
 s_node_t* create_node(const char* key, const char* value, int level) {
@@ -32,17 +38,18 @@ s_node_t* create_node(const char* key, const char* value, int level) {
   return node;
 }
 
-skip_list_t* create_skiplist() {
-  skip_list_t* list = malloc(sizeof(skip_list_t));
+memtable_t* create_memtable() {
+  memtable_t* list = malloc(sizeof(memtable_t));
 
   list->level = 0;
+  list->size = sizeof(s_node_t) + (MAX_LEVEL + 1) * sizeof(s_node_t*);
 
   list->head = create_node("", "", MAX_LEVEL);
 
   return list;
 }
 
-char* search(skip_list_t* list, char* key) {
+char* search(memtable_t* list, const char* key) {
   s_node_t* curr = list->head;
 
   for (int i = list->level; i >= 0; i--) {
@@ -58,7 +65,27 @@ char* search(skip_list_t* list, char* key) {
   return NULL;
 }
 
-void insert(skip_list_t* list, char* key, char* value) {
+void clear_memtable(memtable_t* list) {
+  s_node_t* curr = list->head->forward[0];
+
+  while (curr != NULL) {
+    s_node_t* next = curr->forward[0];
+
+    free(curr->forward);
+    free(curr);
+
+    curr = next;
+  }
+
+  for (int i = 0; i <= MAX_LEVEL; i++) {
+    list->head->forward[i] = NULL;
+  }
+
+  list->size = sizeof(s_node_t) + (MAX_LEVEL + 1) * sizeof(s_node_t*);
+  list->level = 0;
+}
+
+int insert(memtable_t* list, const char* key, const char* value) {
   s_node_t* curr = list->head;
   s_node_t* updates[MAX_LEVEL + 1];
 
@@ -71,6 +98,12 @@ void insert(skip_list_t* list, char* key, char* value) {
 
   curr = curr->forward[0];
 
+  if (curr != NULL && strcmp(curr->key, key) == 0) {
+    strncpy(curr->value, value, 128);
+    curr->value[127] = '\0';
+    return list->size >= MEMTABLE_THRESHOLD ? MEMTABLE_FULL : MEMTABLE_OK;
+  }
+
   int level = random_level();
 
   if (level > list->level) {
@@ -81,9 +114,12 @@ void insert(skip_list_t* list, char* key, char* value) {
   }
 
   s_node_t* node = create_node(key, value, level);
+  list->size += calculate_node_size(level);
 
   for (int i = 0; i <= level; i++) {
     node->forward[i] = updates[i]->forward[i];
     updates[i]->forward[i] = node;
   }
+
+  return list->size >= MEMTABLE_THRESHOLD ? MEMTABLE_FULL : MEMTABLE_OK;
 }

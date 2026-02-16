@@ -1,31 +1,31 @@
 #include <stdio.h>
 
-#include "skip_list.h"
+#include "engine.c"
 
 void run_cli() {
-  char buffer[256];
-  char result[256];
+  char input[256];
+
   char key[64] = {0};
   char value[128] = {0};
 
-  skip_list_t* list = create_skiplist();
+  char result[256];
 
   while (1) {
     printf("LSM > ");
-    if (fgets(buffer, sizeof(buffer), stdin) == NULL) break;
-    switch (buffer[0]) {
+    if (fgets(input, sizeof(input), stdin) == NULL) break;
+    switch (input[0]) {
       case 'p':
-        if (sscanf(buffer, "p %s %s", key, value) == 2) {
-          insert(list, key, value);
+        if (sscanf(input, "p %s %s", key, value) == 2) {
+          put(key, value);
         } else {
           printf("Invalid format\n");
         }
         break;
       case 'g':
-        if (sscanf(buffer, "g %s", key) == 1) {
-          char* res = search(list, key);
-          if (res != NULL) {
-            printf("%s\n", res);
+        if (sscanf(input, "g %s", key) == 1) {
+          int status = get(key, result);
+          if (status == SUCCESS) {
+            printf("Value: %s\n", result);
           } else {
             printf("Value not found\n");
           }

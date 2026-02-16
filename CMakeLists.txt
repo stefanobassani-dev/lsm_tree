@@ -6,11 +6,15 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 include_directories(include)
 
-add_library(database STATIC src/database.c)
-add_library(skip_list STATIC src/skip_list.c)
+add_library(memtable STATIC src/memtable.c)
 add_library(cli STATIC src/cli.c)
+add_library(sstable STATIC src/sstable.c)
+add_library(engine STATIC src/engine.c)
 
-target_link_libraries(cli PRIVATE skip_list)
+target_link_libraries(sstable PRIVATE memtable)
+target_link_libraries(engine PRIVATE sstable)
+target_link_libraries(engine PRIVATE memtable)
+target_link_libraries(cli PRIVATE engine)
 
 add_executable(lsm_tree src/main.c)
 
