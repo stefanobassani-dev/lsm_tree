@@ -3,6 +3,7 @@
 
 #define SUCCESS 1
 #define NOT_FOUND 0
+#define ERROR 0
 
 void engine_init();
 

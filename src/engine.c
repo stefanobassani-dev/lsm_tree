@@ -35,6 +35,11 @@ int get(const char* key, char* result) {
     strncpy(result, value, 128);
     result[127] = '\0';
   } else {
+    for (int i = next_file_id - 1; i >= 0; i--) {
+      int found = sstable_search(i, key, result);
+      if (found == SSTABLE_SEARCH_FOUND) return SUCCESS;
+      if (found == SSTABLE_SEARCH_ERROR) return ERROR;
+    }
     result[0] = '\0';
     return NOT_FOUND;
   }

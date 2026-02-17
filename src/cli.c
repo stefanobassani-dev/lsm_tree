@@ -15,14 +15,14 @@ void run_cli() {
     if (fgets(input, sizeof(input), stdin) == NULL) break;
     switch (input[0]) {
       case 'p':
-        if (sscanf(input, "p %s %s", key, value) == 2) {
+        if (sscanf(input, "p %63s %127s", key, value) == 2) {
           put(key, value);
         } else {
           printf("Invalid format\n");
         }
         break;
       case 'g':
-        if (sscanf(input, "g %s", key) == 1) {
+        if (sscanf(input, "g %63s", key) == 1) {
           int status = get(key, result);
           if (status == SUCCESS) {
             printf("Value: %s\n", result);
