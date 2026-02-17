@@ -11,6 +11,8 @@
 #define MEMTABLE_FULL 1
 #define MEMTABLE_ERROR -1
 
+#define TOMBSTONE_VALUE "#__deleted__#"
+
 typedef struct s_node_t {
   char key[64];
   char value[128];
@@ -31,10 +33,12 @@ s_node_t* create_node(const char* key, const char* value, int level);
 
 memtable_t* create_memtable();
 
-char* search(memtable_t* list, const char* key);
+char* search(memtable_t* memtable, const char* key);
 
-int insert(memtable_t*, const char* key, const char* value);
+int insert(memtable_t* memtable, const char* key, const char* value);
 
-void clear_memtable(memtable_t* list);
+int delete (memtable_t* memtable, const char* key);
+
+void clear_memtable(memtable_t* memtable);
 
 #endif

@@ -33,6 +33,13 @@ void run_cli() {
           printf("Invalid format\n");
         }
         break;
+      case 'd':
+        if (sscanf(input, "d %63s", key) == 1) {
+          tombstone(key);
+        } else {
+          printf("Invalid format\n");
+        }
+        break;
       case 'q':
         return;
       default:

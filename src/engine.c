@@ -29,6 +29,7 @@ void put(const char* key, const char* value) {
 }
 
 int get(const char* key, char* result) {
+  engine_init();
   char* value = search(memtable, key);
 
   if (value != NULL) {
@@ -46,3 +47,5 @@ int get(const char* key, char* result) {
 
   return SUCCESS;
 }
+
+void tombstone(const char* key) { put(key, TOMBSTONE_VALUE); }

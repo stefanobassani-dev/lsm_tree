@@ -9,5 +9,6 @@ void engine_init();
 
 void put(const char* key, const char* value);
 int get(const char* key, char* result);
+void tombstone(const char* key);
 
 #endif

@@ -39,20 +39,20 @@ s_node_t* create_node(const char* key, const char* value, int level) {
 }
 
 memtable_t* create_memtable() {
-  memtable_t* list = malloc(sizeof(memtable_t));
+  memtable_t* memtable = malloc(sizeof(memtable_t));
 
-  list->level = 0;
-  list->size = sizeof(s_node_t) + (MAX_LEVEL + 1) * sizeof(s_node_t*);
+  memtable->level = 0;
+  memtable->size = sizeof(s_node_t) + (MAX_LEVEL + 1) * sizeof(s_node_t*);
 
-  list->head = create_node("", "", MAX_LEVEL);
+  memtable->head = create_node("", "", MAX_LEVEL);
 
-  return list;
+  return memtable;
 }
 
-char* search(memtable_t* list, const char* key) {
-  s_node_t* curr = list->head;
+char* search(memtable_t* memtable, const char* key) {
+  s_node_t* curr = memtable->head;
 
-  for (int i = list->level; i >= 0; i--) {
+  for (int i = memtable->level; i >= 0; i--) {
     while (curr->forward[i] != NULL && strcmp(curr->forward[i]->key, key) < 0) {
       curr = curr->forward[i];
     }
@@ -65,8 +65,8 @@ char* search(memtable_t* list, const char* key) {
   return NULL;
 }
 
-void clear_memtable(memtable_t* list) {
-  s_node_t* curr = list->head->forward[0];
+void clear_memtable(memtable_t* memtable) {
+  s_node_t* curr = memtable->head->forward[0];
 
   while (curr != NULL) {
     s_node_t* next = curr->forward[0];
@@ -78,18 +78,18 @@ void clear_memtable(memtable_t* list) {
   }
 
   for (int i = 0; i <= MAX_LEVEL; i++) {
-    list->head->forward[i] = NULL;
+    memtable->head->forward[i] = NULL;
   }
 
-  list->size = sizeof(s_node_t) + (MAX_LEVEL + 1) * sizeof(s_node_t*);
-  list->level = 0;
+  memtable->size = sizeof(s_node_t) + (MAX_LEVEL + 1) * sizeof(s_node_t*);
+  memtable->level = 0;
 }
 
-int insert(memtable_t* list, const char* key, const char* value) {
-  s_node_t* curr = list->head;
+int insert(memtable_t* memtable, const char* key, const char* value) {
+  s_node_t* curr = memtable->head;
   s_node_t* updates[MAX_LEVEL + 1];
 
-  for (int i = list->level; i >= 0; i--) {
+  for (int i = memtable->level; i >= 0; i--) {
     while (curr->forward[i] != NULL && strcmp(curr->forward[i]->key, key) < 0) {
       curr = curr->forward[i];
     }
@@ -101,25 +101,29 @@ int insert(memtable_t* list, const char* key, const char* value) {
   if (curr != NULL && strcmp(curr->key, key) == 0) {
     strncpy(curr->value, value, 128);
     curr->value[127] = '\0';
-    return list->size >= MEMTABLE_THRESHOLD ? MEMTABLE_FULL : MEMTABLE_OK;
+    return memtable->size >= MEMTABLE_THRESHOLD ? MEMTABLE_FULL : MEMTABLE_OK;
   }
 
   int level = random_level();
 
-  if (level > list->level) {
-    for (int i = list->level + 1; i <= level; i++) {
-      updates[i] = list->head;
+  if (level > memtable->level) {
+    for (int i = memtable->level + 1; i <= level; i++) {
+      updates[i] = memtable->head;
     }
-    list->level = level;
+    memtable->level = level;
   }
 
   s_node_t* node = create_node(key, value, level);
-  list->size += calculate_node_size(level);
+  memtable->size += calculate_node_size(level);
 
   for (int i = 0; i <= level; i++) {
     node->forward[i] = updates[i]->forward[i];
     updates[i]->forward[i] = node;
   }
 
-  return list->size >= MEMTABLE_THRESHOLD ? MEMTABLE_FULL : MEMTABLE_OK;
+  return memtable->size >= MEMTABLE_THRESHOLD ? MEMTABLE_FULL : MEMTABLE_OK;
+}
+
+int delete(memtable_t* memtable, const char* key) {
+  return insert(memtable, key, TOMBSTONE_VALUE);
 }
