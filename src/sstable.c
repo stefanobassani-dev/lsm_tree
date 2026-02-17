@@ -47,25 +47,49 @@ int sstable_search(int file_id, const char* key, char* result) {
     fseek(fd, mid * 192, SEEK_SET);
 
     int read_key = fread(buffer, 64, 1, fd);
-
-    if (read_key == 1) {
-      int cmp = strcmp(key, buffer);
-      if (cmp == 0) {
-        int read_value = fread(result, 128, 1, fd);
-        fclose(fd);
-        return read_value == 1 ? SSTABLE_SEARCH_FOUND : SSTABLE_SEARCH_ERROR;
-      } else {
-        if (cmp < 0) {
-          end = mid - 1;
-        } else {
-          start = mid + 1;
-        }
-      }
-    } else {
+    if (read_key != 1) {
       fclose(fd);
       return SSTABLE_SEARCH_ERROR;
     }
+
+    int cmp = strcmp(key, buffer);
+    // key match
+    if (cmp == 0) {
+      int read_value = fread(result, 128, 1, fd);
+      if (read_value != 1) {
+        fclose(fd);
+        return SSTABLE_SEARCH_ERROR;
+      }
+
+      // check if is deleted
+      return strcmp(result, TOMBSTONE_VALUE) == 0 ? SSTABLE_SEARCH_TOMBSTONE
+                                                  : SSTABLE_SEARCH_FOUND;
+    }
+
+    if (cmp < 0)
+      end = mid - 1;
+    else
+      start = mid + 1;
   }
 
+  fclose(fd);
   return SSTABLE_SEARCH_NOT_FOUND;
+}
+
+void two_way_marge(char* filename1, char* filename2) {
+  FILE* fd1 = fopen(filename1, "rb");
+  if (fd1 == NULL) return;
+  FILE* fd2 = fopen(filename1, "rb");
+  if (fd2 == NULL) return;
+
+  char* buffer1[192];
+  char* buffer2[192];
+
+  int has1 = fread(buffer1, 192, 1, fd1);
+  int has2 = fread(buffer2, 192, 1, fd1);
+
+  while (has1 == 1 && has2 == 1) {
+    char key1[64];
+    str
+  }
 }

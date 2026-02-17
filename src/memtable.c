@@ -60,7 +60,7 @@ char* search(memtable_t* memtable, const char* key) {
 
   curr = curr->forward[0];
   if (curr != NULL && strcmp(curr->key, key) == 0) {
-    return curr->value;
+    return strcmp(curr->value, TOMBSTONE_VALUE) == 0 ? NULL : curr->value;
   }
   return NULL;
 }
@@ -122,8 +122,4 @@ int insert(memtable_t* memtable, const char* key, const char* value) {
   }
 
   return memtable->size >= MEMTABLE_THRESHOLD ? MEMTABLE_FULL : MEMTABLE_OK;
-}
-
-int delete(memtable_t* memtable, const char* key) {
-  return insert(memtable, key, TOMBSTONE_VALUE);
 }
