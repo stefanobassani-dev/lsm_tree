@@ -52,7 +52,7 @@ int sstable_search(int file_id, const char* key, char* result) {
       return SSTABLE_SEARCH_ERROR;
     }
 
-    int cmp = strcmp(key, buffer);
+    int cmp = strncmp(key, buffer, 64);
     // key match
     if (cmp == 0) {
       int read_value = fread(result, 128, 1, fd);
@@ -79,7 +79,7 @@ int sstable_search(int file_id, const char* key, char* result) {
 void two_way_marge(char* filename1, char* filename2) {
   FILE* fd1 = fopen(filename1, "rb");
   if (fd1 == NULL) return;
-  FILE* fd2 = fopen(filename1, "rb");
+  FILE* fd2 = fopen(filename2, "rb");
   if (fd2 == NULL) return;
 
   char* buffer1[192];
@@ -90,6 +90,5 @@ void two_way_marge(char* filename1, char* filename2) {
 
   while (has1 == 1 && has2 == 1) {
     char key1[64];
-    str
   }
 }

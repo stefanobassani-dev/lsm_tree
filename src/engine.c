@@ -30,9 +30,14 @@ void put(const char* key, const char* value) {
 
 int get(const char* key, char* result) {
   engine_init();
-  char* value = search(memtable, key);
+  int status = search(memtable, key, result);
 
-  if (value == NULL) {
+  if (status == MEMTABLE_TOMBSTONE) {
+    result[0] = '\0';
+    return NOT_FOUND;
+  }
+
+  if (status == MEMTABLE_NOT_FOUND) {
     // search on disk
     for (int i = next_file_id - 1; i >= 0; i--) {
       int found = sstable_search(i, key, result);
@@ -47,7 +52,6 @@ int get(const char* key, char* result) {
     return NOT_FOUND;
   }
 
-  strncpy(result, value, 128);
   result[127] = '\0';
   return SUCCESS;
 }

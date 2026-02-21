@@ -20,13 +20,13 @@ size_t calculate_node_size(int level) {
 }
 
 s_node_t* create_node(const char* key, const char* value, int level) {
-  s_node_t* node = malloc(sizeof(s_node_t));
+  s_node_t* node = calloc(1, sizeof(s_node_t));
 
   strncpy(node->key, key, 63);
   node->key[63] = '\0';
 
   strncpy(node->value, value, 127);
-  node->key[127] = '\0';
+  node->value[127] = '\0';
 
   node->forward = calloc(level + 1, sizeof(s_node_t*));
 
@@ -49,7 +49,7 @@ memtable_t* create_memtable() {
   return memtable;
 }
 
-char* search(memtable_t* memtable, const char* key) {
+int search(memtable_t* memtable, const char* key, char* result) {
   s_node_t* curr = memtable->head;
 
   for (int i = memtable->level; i >= 0; i--) {
@@ -60,9 +60,15 @@ char* search(memtable_t* memtable, const char* key) {
 
   curr = curr->forward[0];
   if (curr != NULL && strcmp(curr->key, key) == 0) {
-    return strcmp(curr->value, TOMBSTONE_VALUE) == 0 ? NULL : curr->value;
+    if (strcmp(curr->value, TOMBSTONE_VALUE) == 0) {
+      return MEMTABLE_TOMBSTONE;
+    }
+
+    strncpy(result, curr->value, 127);
+    result[127] = '\0';
+    return MEMTABLE_OK;
   }
-  return NULL;
+  return MEMTABLE_NOT_FOUND;
 }
 
 void clear_memtable(memtable_t* memtable) {

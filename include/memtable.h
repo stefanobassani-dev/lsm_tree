@@ -10,6 +10,8 @@
 #define MEMTABLE_OK 0
 #define MEMTABLE_FULL 1
 #define MEMTABLE_ERROR -1
+#define MEMTABLE_TOMBSTONE -2
+#define MEMTABLE_NOT_FOUND -3
 
 #define TOMBSTONE_VALUE "#__deleted__#"
 
@@ -33,7 +35,7 @@ s_node_t* create_node(const char* key, const char* value, int level);
 
 memtable_t* create_memtable();
 
-char* search(memtable_t* memtable, const char* key);
+int search(memtable_t* memtable, const char* key, char* result);
 
 int insert(memtable_t* memtable, const char* key, const char* value);
 
