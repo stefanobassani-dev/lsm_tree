@@ -13,7 +13,8 @@
 
 #define TOMBSTONE_VALUE "#__deleted__#"
 
-int sstable_flush(memtable_t* memtable, int next_file_id);
-int sstable_search(int file_id, const char* key, char* result);
+int sstable_flush(memtable_t* memtable, char* filename);
+int sstable_search(char* filename, const char* key, char* result);
+void two_way_marge(char* filename1, char* filename2, char* merge_filename);
 
 #endif

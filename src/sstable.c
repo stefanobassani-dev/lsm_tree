@@ -5,10 +5,7 @@
 
 #include "memtable.h"
 
-int sstable_flush(memtable_t* memtable, int next_file_id) {
-  char filename[64];
-  sprintf(filename, "sstable_%04d.bin", next_file_id);
-
+int sstable_flush(memtable_t* memtable, char* filename) {
   FILE* fd = fopen(filename, "wb");
   if (fd == NULL) {
     perror("Error opening SSTables");
@@ -27,10 +24,7 @@ int sstable_flush(memtable_t* memtable, int next_file_id) {
   return SSTABLE_FLUSH_SUCCESS;
 }
 
-int sstable_search(int file_id, const char* key, char* result) {
-  char filename[64];
-  sprintf(filename, "sstable_%04d.bin", file_id);
-
+int sstable_search(char* filename, const char* key, char* result) {
   FILE* fd = fopen(filename, "rb");
   if (fd == NULL) return SSTABLE_SEARCH_NOT_FOUND;
   fseek(fd, 0, SEEK_END);
@@ -76,19 +70,55 @@ int sstable_search(int file_id, const char* key, char* result) {
   return SSTABLE_SEARCH_NOT_FOUND;
 }
 
-void two_way_marge(char* filename1, char* filename2) {
-  FILE* fd1 = fopen(filename1, "rb");
-  if (fd1 == NULL) return;
-  FILE* fd2 = fopen(filename2, "rb");
-  if (fd2 == NULL) return;
+void two_way_marge(char* filename1, char* filename2, char* merge_filename) {
+  FILE* fd_old = fopen(filename1, "rb");
+  if (fd_old == NULL) return;
+  FILE* fd_new = fopen(filename2, "rb");
+  if (fd_new == NULL) {
+    fclose(fd_old);
+    return;
+  }
+  FILE* fd_merge = fopen(merge_filename, "wb");
+  if (fd_merge == NULL) {
+    fclose(fd_old);
+    fclose(fd_new);
+    return;
+  }
 
-  char* buffer1[192];
-  char* buffer2[192];
+  char buffer1[192];
+  char buffer2[192];
 
-  int has1 = fread(buffer1, 192, 1, fd1);
-  int has2 = fread(buffer2, 192, 1, fd1);
+  int has1 = fread(buffer1, 192, 1, fd_old);
+  int has2 = fread(buffer2, 192, 1, fd_new);
 
   while (has1 == 1 && has2 == 1) {
-    char key1[64];
+    buffer1[63] = '\0';
+    buffer2[63] = '\0';
+
+    int cmp = strcmp(buffer1, buffer2);
+
+    char* target = (cmp < 0) ? buffer1 : buffer2;
+
+    target[191] = '\0';
+    fwrite(target, 192, 1, fd_merge);
+
+    if (cmp <= 0) has1 = fread(buffer1, 192, 1, fd_old);
+    if (cmp >= 0) has2 = fread(buffer2, 192, 1, fd_new);
   }
+
+  while (has1 == 1) {
+    buffer1[191] = '\0';
+    fwrite(buffer1, 192, 1, fd_merge);
+    has1 = fread(buffer1, 192, 1, fd_old);
+  }
+
+  while (has2 == 1) {
+    buffer2[191] = '\0';
+    fwrite(buffer2, 192, 1, fd_merge);
+    has2 = fread(buffer2, 192, 1, fd_new);
+  }
+
+  fclose(fd_old);
+  fclose(fd_new);
+  fclose(fd_merge);
 }

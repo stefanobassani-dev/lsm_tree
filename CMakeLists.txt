@@ -19,3 +19,7 @@ target_link_libraries(cli PRIVATE engine)
 add_executable(lsm_tree src/main.c)
 
 target_link_libraries(lsm_tree PRIVATE cli)
+
+# Aggiungi l'eseguibile per il test del merge
+add_executable(test_merge_runner src/test_merge.c)
+target_link_libraries(test_merge_runner PRIVATE sstable memtable)
