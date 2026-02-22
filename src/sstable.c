@@ -100,7 +100,11 @@ void two_way_marge(char* filename1, char* filename2, char* merge_filename) {
     char* target = (cmp < 0) ? buffer1 : buffer2;
 
     target[191] = '\0';
-    fwrite(target, 192, 1, fd_merge);
+    char* value = target + 64;
+
+    if (cmp < 0 || strcmp(value, TOMBSTONE_VALUE) != 0) {
+      fwrite(target, 192, 1, fd_merge);
+    }
 
     if (cmp <= 0) has1 = fread(buffer1, 192, 1, fd_old);
     if (cmp >= 0) has2 = fread(buffer2, 192, 1, fd_new);
