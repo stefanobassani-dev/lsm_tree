@@ -1,5 +1,6 @@
 #include "sstable.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -70,7 +71,8 @@ int sstable_search(char* filename, const char* key, char* result) {
   return SSTABLE_SEARCH_NOT_FOUND;
 }
 
-void two_way_marge(char* filename1, char* filename2, char* merge_filename) {
+void two_way_marge(char* filename1, char* filename2, char* merge_filename,
+                   bool is_temp) {
   FILE* fd_old = fopen(filename1, "rb");
   if (fd_old == NULL) return;
   FILE* fd_new = fopen(filename2, "rb");
@@ -102,7 +104,7 @@ void two_way_marge(char* filename1, char* filename2, char* merge_filename) {
     target[191] = '\0';
     char* value = target + 64;
 
-    if (cmp < 0 || strcmp(value, TOMBSTONE_VALUE) != 0) {
+    if (!is_temp && (cmp < 0 || strcmp(value, TOMBSTONE_VALUE) != 0)) {
       fwrite(target, 192, 1, fd_merge);
     }
 

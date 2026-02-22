@@ -1,6 +1,8 @@
 #ifndef SSTABLE_H
 #define SSTABLE_H
 
+#include <stdbool.h>
+
 #include "memtable.h"
 
 #define SSTABLE_FLUSH_SUCCESS 0
@@ -15,6 +17,7 @@
 
 int sstable_flush(memtable_t* memtable, char* filename);
 int sstable_search(char* filename, const char* key, char* result);
-void two_way_marge(char* filename1, char* filename2, char* merge_filename);
+void two_way_marge(char* filename1, char* filename2, char* merge_filename,
+                   bool is_temp);
 
 #endif
